@@ -122,7 +122,7 @@ class PluginSimcardConfig extends CommonDBTM {
       self::$config = array();
       $query = "SELECT * FROM `". $table ."`";
       $result = $DB->query($query);
-      while ($data=$DB->fetch_array($result)) {
+      while ($data=$DB->fetchArray($result)) {
          self::$config[$data['type']] = $data['value'];
       }
    }

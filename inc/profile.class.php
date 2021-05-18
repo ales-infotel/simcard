@@ -116,7 +116,7 @@ class PluginSimcardProfile extends Profile {
       	case '1.3.1':
       		$query = "SELECT * FROM `glpi_plugin_simcard_profiles`";
       		$result = $DB->query($query);
-      		while ($data = $DB->fetch_assoc($result)) {
+      		while ($data = $DB->fetchAssoc($result)) {
       			// Write the access rights into the new ACLs system of GLPI 0.85 
       			$translatedRight = self::translateARight($data['simcard']) + self::translateARight($data['open_ticket']);
       			if ($translatedRight & READ) {

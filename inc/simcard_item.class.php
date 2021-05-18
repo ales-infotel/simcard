@@ -135,7 +135,7 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
    static function install(Migration $migration) {
       global $DB;
       $table = getTableForItemType(__CLASS__);
-      if (!TableExists($table)) {
+      if (!$DB->tableExists($table)) {
          $query = "CREATE TABLE IF NOT EXISTS `$table` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `items_id` int(11) NOT NULL DEFAULT '0' COMMENT 'RELATION to various table, according to itemtype (id)',
@@ -171,14 +171,22 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
       if (!$simcard->canView()) {
          return false;
       }
-      $results = getAllDatasFromTable(getTableForItemType(__CLASS__),
-                                     "`plugin_simcard_simcards_id` = '".$simcard->getID()."'");
+      $crit = ["plugin_simcard_simcards_id" =>$simcard->getID() ];
+      $results = getAllDataFromTable(getTableForItemType(__CLASS__),
+                                     $crit);
       echo "<div class='spaced'>";
-      echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
+//      echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
+      $rand = mt_rand();
+      Html::openMassiveActionsForm('mass' . __CLASS__ . $rand);
+      $massiveactionparams = ['item'      => __CLASS__,
+                              'container' => 'mass' . __CLASS__ . $rand];
+      Html::showMassiveActions($massiveactionparams);
       echo "<table class='tab_cadre_fixehov'>";
       echo "<tr><th colspan='6'>".__("Associated item")."</th></tr>";
       if (!empty($results)) {
-         echo "<tr><th></th>";
+         echo "<tr><th>";
+         echo Html::getCheckAllAsCheckbox('mass' . __CLASS__ . $rand);
+         echo "</th>";
          echo "<th>".__s("Type")."</th>";
          echo "<th>".__s("Entity")."</th>";
          echo "<th>".__s("Name")."</th>";
@@ -191,7 +199,8 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
             echo "<tr>";
             echo "<td>";
             if (PluginSimcardSimcard::canUpdate()) {
-               echo "<input type='checkbox' name='todelete[".$data['id']."]'>";
+               Html::showMassiveActionCheckBox(__CLASS__, $data['id']);
+//               echo "<input type='checkbox' name='todelete[".$data['id']."]'>";
             }
             echo "</td>";
             echo "<td>";
@@ -218,26 +227,41 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
             echo "</tr>";
          }
       }
+      if (!empty($results)) {
+         //            Html::openArrowMassives('items', true);
+         //            Html::closeArrowMassives(array('delete_items' => _sx('button', 'Disconnect')));
+         $massiveactionparams['ontop'] = false;
+         Html::showMassiveActions($massiveactionparams);
+      }
+      echo "</table>" ;
+      Html::closeForm();
       
+
       if (PluginSimcardsimcard::canUpdate()) {
+         echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
+         echo "<table class='tab_cadre_fixehov'>";
          echo "<tr class='tab_bg_1'><td colspan='4' class='center'>";
-         if (empty($results)) {
+//         if (empty($results)) {
             echo "<input type='hidden' name='plugin_simcard_simcards_id' value='".$simcard->getID()."'>";
             // TODO : Dropdown::showAllItems is deprecated, use Dropdown::showSelectItemFromItemtypes instead
-            Dropdown::showAllItems("items_id",0,0,$simcard->fields['entities_id'], self::getClasses());
+            $opt = ['items_id_name'   => 'items_id',
+                    'itemtypes'       => self::getClasses(true),
+                    'entity_restrict' => $simcard->fields['entities_id'],
+                    'checkright'     => true,
+                    'display'        => true];
+            Dropdown::showSelectItemFromItemtypes($opt);
+//            Dropdown::showAllItems("items_id",0,0,$simcard->fields['entities_id'], self::getClasses());
             echo "</td>";
             echo "<td colspan='2' class='center' class='tab_bg_2'>";
             echo "<input type='submit' name='additem' value=\""._sx('button', 'Add')."\" class='submit'>";
             echo "</td></tr>";
-         }
+            echo "</table>";
+            Html::closeForm();
+//         }
    
-         if (!empty($results)) {
-            Html::openArrowMassives('items', true);
-            Html::closeArrowMassives(array('delete_items' => _sx('button', 'Disconnect')));
-         }
+
       }
-      echo "</table>" ;
-      Html::closeForm();
+
       echo "</div>";
    }
    
@@ -256,8 +280,9 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
 
 //       	 }
 //       }
-      $results = getAllDatasFromTable(getTableForItemType(__CLASS__),
-                                     "`items_id` = '".$item->getID()."' AND `itemtype`='".get_class($item)."'");
+      $crit = ["items_id" =>$item->getID(), 'itemtype' => get_class($item) ];
+      $results = getAllDataFromTable(getTableForItemType(__CLASS__),
+                                     $crit);
       echo "<div class='spaced'>";
       echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
       echo "<table class='tab_cadre_fixehov'>";
@@ -356,9 +381,9 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
     **/
    static function countForSimcard(PluginSimcardSimcard $item) {
    
-      $restrict = "`glpi_plugin_simcard_simcards_items`.`plugin_simcard_simcards_id` = '".$item->getField('id')."'";
+      $restrict = " `glpi_plugin_simcard_simcards_items`.`plugin_simcard_simcards_id` = '".$item->getField('id')."'";
    	
-      return countElementsInTable(array('glpi_plugin_simcard_simcards_items'), $restrict);
+      return countElementsInTable(array('glpi_plugin_simcard_simcards_items'), ['plugin_simcard_simcards_id' => $item->getField('id') ]);
    }
    
    static function displayTabContentForItem(CommonGLPI $item, $tabnum=1, $withtemplate=0) {

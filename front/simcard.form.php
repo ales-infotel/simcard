@@ -53,7 +53,7 @@ $simcard = new PluginSimcardSimcard();
 if (isset($_POST["add"])) {
    $simcard->check(-1, CREATE, $_POST);
    if ($newID = $simcard->add($_POST)) {
-      Event::log($newID, "simcard", 4, "inventory",
+      \Glpi\Event::log($newID, "simcard", 4, "inventory",
                  sprintf(__('%1$s adds the item %2$s'), $_SESSION["glpiname"], $_POST["name"]));
    }
    Html::back();
@@ -63,7 +63,7 @@ if (isset($_POST["add"])) {
    $simcard->check($_POST['id'], DELETE);
    $ok = $simcard->delete($_POST);
    if ($ok) {
-      Event::log($_POST["id"], "simcard", 4, "inventory",
+      \Glpi\Event::log($_POST["id"], "simcard", 4, "inventory",
                  //TRANS: %s is the user login
                  sprintf(__('%s deletes an item'), $_SESSION["glpiname"]));
    }
@@ -72,7 +72,7 @@ if (isset($_POST["add"])) {
 } else if (isset($_POST["restore"])) {
    $simcard->check($_POST['id'], PURGE);
    if ($simcard->restore($_POST)) {
-      Event::log($_POST["id"],"simcard", 4, "inventory",
+      \Glpi\Event::log($_POST["id"],"simcard", 4, "inventory",
                  //TRANS: %s is the user login
                  sprintf(__('%s restores the item'), $_SESSION["glpiname"]));
    }
@@ -81,7 +81,7 @@ if (isset($_POST["add"])) {
 } else if (isset($_REQUEST["purge"])) {
    $simcard->check($_REQUEST['id'], PURGE);
    if ($simcard->delete($_REQUEST, 1)) {
-      Event::log($_POST["id"], "simcard", 4, "inventory",
+      \Glpi\Event::log($_POST["id"], "simcard", 4, "inventory",
                  //TRANS: %s is the user login
                  sprintf(__('%s purges an item'), $_SESSION["glpiname"]));
    }
@@ -91,7 +91,7 @@ if (isset($_POST["add"])) {
 } else if (isset($_POST["update"])) {
    $simcard->check($_POST['id'], UPDATE);
    $simcard->update($_POST);
-   Event::log($_POST["id"], "simcard", 4, "inventory",
+   \Glpi\Event::log($_POST["id"], "simcard", 4, "inventory",
               //TRANS: %s is the user login
               sprintf(__('%s updates an item'), $_SESSION["glpiname"]));
    Html::back();
