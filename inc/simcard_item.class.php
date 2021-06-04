@@ -103,8 +103,9 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
    static function countForItemByItemtype(CommonDBTM $item) {
       $id = $item->getField('id');
       $itemtype = $item->getType();
+      $condition = ["items_id" =>$id,"itemtype" => $itemtype];
    	  return countElementsInTable(getTableForItemType(__CLASS__),
-   		 "`items_id`='$id' AND `itemtype`='$itemtype'");
+   		 $condition);
    }
     
    /**
@@ -284,11 +285,19 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
       $results = getAllDataFromTable(getTableForItemType(__CLASS__),
                                      $crit);
       echo "<div class='spaced'>";
-      echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
+      $rand = mt_rand();
+
+      Html::openMassiveActionsForm('mass' . __CLASS__ . $rand);
+      $massiveactionparams = ['item'      => __CLASS__,
+                              'container' => 'mass' . __CLASS__ . $rand];
+      Html::showMassiveActions($massiveactionparams);
       echo "<table class='tab_cadre_fixehov'>";
       echo "<tr><th colspan='6'>".__s('Associated item')."</th></tr>";
+
       if (!empty($results)) {
-         echo "<tr><th></th>";
+         echo "<tr><th>";
+         echo Html::getCheckAllAsCheckbox('mass' . __CLASS__ . $rand);
+         echo "</th>";
          echo "<th>".__s('Entity')."</th>";
          echo "<th>".__s('Name')."</th>";
          echo "<th>".__s('IMSI')."</th>";
@@ -299,8 +308,12 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
             $tmp->getFromDB($data['plugin_simcard_simcards_id']);
             echo "<tr>";
             echo "<td>";
+//            if (PluginSimcardSimcard::canDelete()) {
+//               echo "<input type='checkbox' name='todelete[".$data['id']."]'>";
+//            }
             if (PluginSimcardSimcard::canDelete()) {
-               echo "<input type='checkbox' name='todelete[".$data['id']."]'>";
+               Html::showMassiveActionCheckBox(__CLASS__, $data['id']);
+               //               echo "<input type='checkbox' name='todelete[".$data['id']."]'>";
             }
             echo "</td>";
             echo "<td>";
@@ -318,8 +331,20 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
             echo "</tr>";
          }
       }
-      
       if (PluginSimcardSimcard::canUpdate()) {
+         if (!empty($results)) {
+            //            Html::openArrowMassives('items', true);
+            //            Html::closeArrowMassives(array ('delete_items' => _sx('button', 'Disconnect')));
+            $massiveactionparams['ontop'] = false;
+            Html::showMassiveActions($massiveactionparams);
+         }
+      }
+      echo "</table>" ;
+      Html::closeForm();
+
+      if (PluginSimcardSimcard::canUpdate()) {
+         echo "<form id='items' name='items' method='post' action='".Toolbox::getItemTypeFormURL(__CLASS__)."'>";
+         echo "<table class='tab_cadre_fixehov'>";
          echo "<tr class='tab_bg_1'><td colspan='4' class='center'>";
          echo "<input type='hidden' name='items_id' value='".$item->getID()."'>";
          echo "<input type='hidden' name='itemtype' value='".$item->getType()."'>";
@@ -339,14 +364,12 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
          echo "<td colspan='2' class='center' class='tab_bg_2'>";
          echo "<input type='submit' name='additem' value=\""._sx('button', 'Save')."\" class='submit'>";
          echo "</td></tr>";
+         echo "</table>" ;
+         Html::closeForm();
          
-         if (!empty($results)) {
-            Html::openArrowMassives('items', true);
-            Html::closeArrowMassives(array ('delete_items' => _sx('button', 'Disconnect')));
-         }
+
       }
-      echo "</table>" ;
-      Html::closeForm();
+
       echo "</div>";
    }
 
@@ -394,6 +417,14 @@ class PluginSimcardSimcard_Item extends CommonDBRelation{
          self::showForSimcard($item);
       }
       return true;
+   }
+
+   function getForbiddenStandardMassiveAction() {
+      $forbidden   = parent::getForbiddenStandardMassiveAction();
+      $forbidden[] = 'MassiveAction:update';
+
+
+      return $forbidden;
    }
 }
 ?>
